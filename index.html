@@ -978,18 +978,12 @@ function openSrv(k){
 }
 
 function closeSrv(){ document.getElementById('srvModal').classList.remove('open'); document.body.style.overflow=''; }
-
+// GEO - DISABILITATA TEMPORANEAMENTE PER CORS
 async function detectGeo(){
-  try{
-    const r=await fetch('https://ipapi.co/json/');
-    const d=await r.json();
-    if(d&&d.ip){
-      sessionStorage.setItem('geo_ip',d.ip);
-      sessionStorage.setItem('geo_city',d.city||'');
-      sessionStorage.setItem('geo_region',d.region||'');
-      sessionStorage.setItem('geo_country',d.country_code||'');
-    }
-  }catch(e){}
+  // Non facciamo più la chiamata a ipapi.co che dà errore CORS
+  // In futuro useremo un metodo alternativo o un backend
+  console.log('Geo detection disabilitata per CORS');
+  return;
 }
 detectGeo();
 </script>
