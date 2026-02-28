@@ -246,7 +246,6 @@ footer p{color:var(--muted);font-size:.75rem;line-height:1.7;margin-top:.4rem;}
 /* DESKTOP */
 @media(min-width:900px){
   body{padding-bottom:56px;}
-  /* bnav rimane visibile su desktop */
   .hamburger{display:none;}
   nav.topnav{padding:0 2rem;}
   .nav-links{display:flex;gap:1.8rem;list-style:none;position:absolute;left:50%;transform:translateX(-50%);}
@@ -257,7 +256,6 @@ footer p{color:var(--muted);font-size:.75rem;line-height:1.7;margin-top:.4rem;}
   .page-header h1{font-size:1.9rem;}
   .sec-label{padding:.7rem 2rem .45rem;}
 
-  /* Desktop: sign modal grande e centrato */
   #signModal{align-items:center;justify-content:center;}
   #signModal .sheet{border-radius:20px;max-width:680px;width:90%;max-height:88vh;}
   #signModal .pull{display:none;}
@@ -269,22 +267,18 @@ footer p{color:var(--muted);font-size:.75rem;line-height:1.7;margin-top:.4rem;}
   #signModal .pers-box-title{font-size:1rem;}
   #signModal .pers-box-desc{font-size:.85rem;}
 
-  /* Service modal centrato */
   #srvModal{align-items:center;}
   #srvModal .sheet{border-radius:18px;max-width:500px;max-height:88vh;}
   #srvModal .pull{display:none;}
 
-  /* Luna modal centrato */
   #lunaModal{align-items:center;}
   #lunaModal .sheet{border-radius:18px;max-width:480px;max-height:88vh;}
   #lunaModal .luna-msgs{max-height:55vh;}
 
-  /* Auth modal centrato */
   #authModal{align-items:center;}
   #authModal .sheet{border-radius:18px;max-width:400px;max-height:88vh;}
   #authModal .pull{display:none;}
 
-  /* Pers modal centrato */
   #persModal{align-items:center;}
   #persModal .sheet{border-radius:18px;max-width:440px;max-height:88vh;}
   #persModal .pull{display:none;}
@@ -349,7 +343,6 @@ footer p{color:var(--muted);font-size:.75rem;line-height:1.7;margin-top:.4rem;}
       <div class="sm-dates" id="sm-dates"></div>
       <div class="sm-tags" id="sm-tags"></div>
     </div>
-    <!-- PULSANTI AZIONE — subito sotto le caratteristiche -->
     <div class="sign-action-row">
       <button class="btn-cta btn-personalizza" onclick="openPersonalize()">✦ Personalizza</button>
       <button class="btn-luna" onclick="openLunaFromSign()">🌙 Parla con Luna</button>
@@ -363,7 +356,6 @@ footer p{color:var(--muted);font-size:.75rem;line-height:1.7;margin-top:.4rem;}
       <div class="horo-date" id="horo-date"></div>
       <div class="horo-text" id="horo-text"></div>
     </div>
-    <!-- PERSONALIZZA BOX -->
     <div class="pers-box">
       <div class="pers-box-title">Personalizza e ricevi il tuo oroscopo quotidiano</div>
       <div class="pers-box-desc">Basato sulla tua data di nascita, costruito su di te. Scegli come riceverlo ogni mattina — oppure consultati con Luna per un approfondimento personale.</div>
@@ -585,11 +577,14 @@ footer p{color:var(--muted);font-size:.75rem;line-height:1.7;margin-top:.4rem;}
 </nav>
 
 <script>
-// SUPABASE
+// ==================== CONFIGURAZIONE SUPABASE ====================
+// CAMBIA SOLO QUESTE DUE RIGHE CON I DATI DEL TUO NUOVO PROGETTO:
+const SUPABASE_URL = 'IL_TUO_NUOVO_URL_SUPABASE';  // ← SOSTITUISCI QUI
+const SUPABASE_ANON_KEY = 'LA_TUA_NUOVA_ANON_KEY'; // ← SOSTITUISCI QUI
+
+// NON MODIFICARE NULLA DA QUI IN POI
 const{createClient}=supabase;
-const sb=createClient('https://guacitjtssidnyiczxwc.supabase.co','eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd1YWNpdGp0c3NpZG55aWN6eHdjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIwNDY0MDUsImV4cCI6MjA4NzYyMjQwNX0.ffwSC4Bu4qm3NE0QXvq_fjDhjqhXhUwo0qpVh4JQLgM');
-const EDGE='https://guacitjtssidnyiczxwc.supabase.co/functions/v1/smart-function';
-const ANON='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd1YWNpdGp0c3NpZG55aWN6eHdjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIwNDY0MDUsImV4cCI6MjA4NzYyMjQwNX0.ffwSC4Bu4qm3NE0QXvq_fjDhjqhXhUwo0qpVh4JQLgM';
+const sb=createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 let user=null;
 
 sb.auth.onAuthStateChange((e,s)=>{user=s?.user||null;updateUI();});
@@ -597,58 +592,76 @@ sb.auth.getSession().then(({data:{session}})=>{user=session?.user||null;updateUI
 
 function updateUI(){
   const nb=document.getElementById('navBtns'),um=document.getElementById('umenu');
-  if(user){nb.style.display='none';um.style.display='block';document.getElementById('uav').textContent=(user.email||'?')[0].toUpperCase();}
-  else{nb.style.display='flex';um.style.display='none';}
+  if(user){
+    nb.style.display='none';
+    um.style.display='block';
+    document.getElementById('uav').textContent=(user.email||'?')[0].toUpperCase();
+    loadUserBirthData();
+  } else {
+    nb.style.display='flex';
+    um.style.display='none';
+  }
 }
 
-// AUTH
-function openAuth(t='login'){document.getElementById('authModal').classList.add('open');switchTab(t);document.body.style.overflow='hidden';}
-function closeAuth(){document.getElementById('authModal').classList.remove('open');document.body.style.overflow='';document.getElementById('amsg').style.display='none';}
-function switchTab(t){
-  const l=t==='login';
-  document.getElementById('loginForm').style.display=l?'block':'none';
-  document.getElementById('registerForm').style.display=l?'none':'block';
-  document.getElementById('mtitle').textContent=l?'Bentornato ✦':'Crea il tuo account';
-  document.getElementById('msub').textContent=l?'Accedi per il tuo oroscopo personale':'Registrati — è gratis';
-  document.querySelectorAll('.mtab').forEach((t,i)=>t.classList.toggle('active',(i===0)===l));
-  document.getElementById('amsg').style.display='none';
+async function loadUserBirthData(){
+  if(!user) return;
+  const {data} = await sb
+    .from('birth_data')
+    .select('*')
+    .eq('user_id', user.id)
+    .eq('is_primary', true)
+    .single();
+  if(data){
+    document.getElementById('p-date').value = data.birth_date;
+    document.getElementById('p-time').value = data.birth_time || '';
+    document.getElementById('p-city').value = data.birth_city || '';
+  }
 }
-function showMsg(m,t='err'){const e=document.getElementById('amsg');e.textContent=m;e.className=`amsg ${t}`;e.style.display='block';}
-async function doLogin(){
-  const e=document.getElementById('le').value.trim(),p=document.getElementById('lp').value;
-  if(!e||!p)return showMsg('Inserisci email e password');
-  const{error}=await sb.auth.signInWithPassword({email:e,password:p});
-  if(error)return showMsg(error.message);
-  showMsg('Accesso effettuato ✦','ok');setTimeout(closeAuth,1200);
+
+async function saveBirthData(){
+  if(!user) { openAuth('register'); return false; }
+  const birthDate = document.getElementById('p-date').value;
+  const birthTime = document.getElementById('p-time').value;
+  const birthCity = document.getElementById('p-city').value;
+  if(!birthDate || !birthCity){ alert('Inserisci data e città'); return false; }
+  const {error} = await sb
+    .from('birth_data')
+    .upsert({
+      user_id: user.id,
+      birth_date: birthDate,
+      birth_time: birthTime || null,
+      birth_city: birthCity,
+      is_primary: true
+    });
+  if(error){ alert('Errore: ' + error.message); return false; }
+  return true;
 }
-async function doRegister(){
-  const n=document.getElementById('rn').value.trim(),e=document.getElementById('re').value.trim(),p=document.getElementById('rp').value;
-  if(!n||!e||!p)return showMsg('Compila tutti i campi');
-  if(p.length<8)return showMsg('Password di almeno 8 caratteri');
-  const{error}=await sb.auth.signUp({email:e,password:p,options:{data:{full_name:n}}});
-  if(error)return showMsg(error.message);
-  showMsg('Benvenuto! Controlla la tua email ✦','ok');setTimeout(closeAuth,2000);
+
+let currentSign=null, currentHoroTab='day';
+
+async function fetchHoro(sign, period){
+  if(!user) return 'Accedi per vedere il tuo oroscopo personalizzato ✦';
+  const today = new Date().toISOString().split('T')[0];
+  const {data: cached} = await sb
+    .from('horoscope_cache')
+    .select('horoscope_text')
+    .eq('user_id', user.id)
+    .eq('cache_date', today)
+    .eq('cache_type', period)
+    .maybeSingle();
+  if(cached) return cached.horoscope_text;
+  const newHoroscope = `Oroscopo personalizzato per ${sign} - ${period}. (Presto disponibile)`;
+  await sb
+    .from('horoscope_cache')
+    .insert({
+      user_id: user.id,
+      cache_date: today,
+      cache_type: period,
+      horoscope_text: newHoroscope
+    });
+  return newHoroscope;
 }
-async function doGoogle(){const{error}=await sb.auth.signInWithOAuth({provider:'google',options:{redirectTo:window.location.origin}});if(error)showMsg(error.message);}
-async function doLogout(){await sb.auth.signOut();document.getElementById('udrop').classList.remove('open');}
-function toggleDrop(){document.getElementById('udrop').classList.toggle('open');}
 
-// DRAWER
-function openDrawer(){document.getElementById('drawer').classList.add('open');document.getElementById('dov').classList.add('open');document.body.style.overflow='hidden';}
-function closeDrawer(){document.getElementById('drawer').classList.remove('open');document.getElementById('dov').classList.remove('open');document.body.style.overflow='';}
-
-// CLOSE ON BG CLICK
-document.addEventListener('click',e=>{
-  if(!e.target.closest('.umenu'))document.getElementById('udrop').classList.remove('open');
-  ['authModal','signModal','persModal','srvModal','lunaModal'].forEach(id=>{
-    if(e.target===document.getElementById(id)){
-      document.getElementById(id).classList.remove('open');
-      document.body.style.overflow='';
-    }
-  });
-});
-
-// SIGN DATA
 const SIGNS={
   ariete:{sym:'♈',name:'Ariete',dates:'21 Mar – 19 Apr',element:'Fuoco',planet:'Marte',traits:['Coraggioso','Leader','Impulsivo']},
   toro:{sym:'♉',name:'Toro',dates:'20 Apr – 20 Mag',element:'Terra',planet:'Venere',traits:['Paziente','Affidabile','Sensuale']},
@@ -664,22 +677,8 @@ const SIGNS={
   pesci:{sym:'♓',name:'Pesci',dates:'19 Feb – 20 Mar',element:'Acqua',planet:'Nettuno',traits:['Empatico','Creativo','Spirituale']},
 };
 
-let currentSign=null,currentHoroTab='day',selectedDelivery='telegram';
-const horoCache={};
-
-async function fetchHoro(sign,period){
-  const k=`${sign}_${period}`;
-  if(horoCache[k])return horoCache[k];
-  try{
-    const r=await fetch(EDGE,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+ANON},body:JSON.stringify({sign,period})});
-    const d=await r.json();
-    if(d.horoscope){horoCache[k]=d.horoscope;return d.horoscope;}
-  }catch(e){}
-  return 'Oroscopo temporaneamente non disponibile.';
-}
-
 function openSign(s){
-  const d=SIGNS[s];if(!d)return;
+  const d=SIGNS[s]; if(!d) return;
   currentSign=s;
   document.getElementById('sm-sym').textContent=d.sym;
   document.getElementById('sm-name').textContent=d.name;
@@ -694,17 +693,18 @@ function openSign(s){
   document.body.style.overflow='hidden';
   setHoroTab(null,'day');
 }
-function closeSign(){document.getElementById('signModal').classList.remove('open');document.body.style.overflow='';}
+
+function closeSign(){ document.getElementById('signModal').classList.remove('open'); document.body.style.overflow=''; }
 
 async function setHoroTab(el,type){
-  if(!currentSign)return;
+  if(!currentSign) return;
   document.querySelectorAll('.htab').forEach(t=>t.classList.remove('active'));
-  if(el)el.classList.add('active');
+  if(el) el.classList.add('active');
   currentHoroTab=type;
   const today=new Date().toLocaleDateString('it-IT',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
   const dates={day:today,month:new Date().toLocaleDateString('it-IT',{month:'long',year:'numeric'}),year:'Anno 2026'};
   document.getElementById('horo-date').textContent=dates[type];
-  document.getElementById('horo-text').innerHTML='<span style="color:var(--muted);font-style:italic;font-size:.8rem;">Luna sta scrivendo...</span>';
+  document.getElementById('horo-text').innerHTML='<span style="color:var(--muted);font-style:italic;">Caricamento...</span>';
   const text=await fetchHoro(currentSign,type);
   document.getElementById('horo-text').textContent=text;
 }
@@ -715,33 +715,172 @@ function selDopt(el,type){
   el.classList.add('sel');
 }
 
-function openLunaFromSign(){closeSign();openLuna();}
+function openLunaFromSign(){ closeSign(); setTimeout(openLuna,200); }
 
-// PERSONALIZE WIZARD
-let persStep=1,selPlanVal='base_m',selDel2='telegram';
+let persStep=1, selPlanVal='base_m', selDel2='telegram';
+
 function openPersonalize(){
+  if(!user){ openAuth('register'); return; }
   persStep=1;
   document.querySelectorAll('.pers-step').forEach(s=>s.classList.remove('active'));
   document.getElementById('pstep1').classList.add('active');
+  loadUserBirthData();
   document.getElementById('persModal').classList.add('open');
   document.body.style.overflow='hidden';
 }
-function closePers(){document.getElementById('persModal').classList.remove('open');document.body.style.overflow='';}
-function persNext(s){
-  if(s===1&&!document.getElementById('p-date').value)return alert('Inserisci la tua data di nascita');
+
+function closePers(){ document.getElementById('persModal').classList.remove('open'); document.body.style.overflow=''; }
+
+async function persNext(s){
+  if(s===1){ const saved = await saveBirthData(); if(!saved) return; }
   persStep=s+1;
   document.querySelectorAll('.pers-step').forEach(x=>x.classList.remove('active'));
   document.getElementById('pstep'+persStep).classList.add('active');
 }
+
 function persBack(s){
   persStep=s-1;
   document.querySelectorAll('.pers-step').forEach(x=>x.classList.remove('active'));
   document.getElementById('pstep'+persStep).classList.add('active');
 }
-function selDopt2(el,type){selDel2=type;document.querySelectorAll('#pstep2 .dopt').forEach(o=>o.classList.remove('sel'));el.classList.add('sel');}
-function selPlan(el,plan){selPlanVal=plan;document.querySelectorAll('.plan-opt').forEach(o=>o.classList.remove('sel'));el.classList.add('sel');}
 
-// SERVICES
+function selDopt2(el,type){
+  selDel2=type;
+  document.querySelectorAll('#pstep2 .dopt').forEach(o=>o.classList.remove('sel'));
+  el.classList.add('sel');
+}
+
+function selPlan(el,plan){
+  selPlanVal=plan;
+  document.querySelectorAll('.plan-opt').forEach(o=>o.classList.remove('sel'));
+  el.classList.add('sel');
+}
+
+function openAuth(t='login'){
+  document.getElementById('authModal').classList.add('open');
+  switchTab(t);
+  document.body.style.overflow='hidden';
+}
+
+function closeAuth(){
+  document.getElementById('authModal').classList.remove('open');
+  document.body.style.overflow='';
+  document.getElementById('amsg').style.display='none';
+}
+
+function switchTab(t){
+  const l=t==='login';
+  document.getElementById('loginForm').style.display=l?'block':'none';
+  document.getElementById('registerForm').style.display=l?'none':'block';
+  document.getElementById('mtitle').textContent=l?'Bentornato ✦':'Crea il tuo account';
+  document.getElementById('msub').textContent=l?'Accedi per il tuo oroscopo personale':'Registrati — è gratis';
+  document.querySelectorAll('.mtab').forEach((t,i)=>t.classList.toggle('active',(i===0)===l));
+  document.getElementById('amsg').style.display='none';
+}
+
+function showMsg(m,t='err'){
+  const e=document.getElementById('amsg');
+  e.textContent=m;
+  e.className=`amsg ${t}`;
+  e.style.display='block';
+}
+
+async function doLogin(){
+  const e=document.getElementById('le').value.trim(),p=document.getElementById('lp').value;
+  if(!e||!p) return showMsg('Inserisci email e password');
+  const{error}=await sb.auth.signInWithPassword({email:e,password:p});
+  if(error) return showMsg(error.message);
+  showMsg('Accesso effettuato ✦','ok');
+  setTimeout(closeAuth,1200);
+}
+
+async function doRegister(){
+  const n=document.getElementById('rn').value.trim(),
+        e=document.getElementById('re').value.trim(),
+        p=document.getElementById('rp').value;
+  if(!n||!e||!p) return showMsg('Compila tutti i campi');
+  if(p.length<8) return showMsg('Password di almeno 8 caratteri');
+  const{error}=await sb.auth.signUp({email:e,password:p,options:{data:{full_name:n}}});
+  if(error) return showMsg(error.message);
+  showMsg('Benvenuto! Controlla la tua email ✦','ok');
+  setTimeout(closeAuth,2000);
+}
+
+async function doGoogle(){
+  const{error}=await sb.auth.signInWithOAuth({provider:'google',options:{redirectTo:window.location.origin}});
+  if(error) showMsg(error.message);
+}
+
+async function doLogout(){ await sb.auth.signOut(); document.getElementById('udrop').classList.remove('open'); window.location.reload(); }
+function toggleDrop(){ document.getElementById('udrop').classList.toggle('open'); }
+function openDrawer(){ document.getElementById('drawer').classList.add('open'); document.getElementById('dov').classList.add('open'); document.body.style.overflow='hidden'; }
+function closeDrawer(){ document.getElementById('drawer').classList.remove('open'); document.getElementById('dov').classList.remove('open'); document.body.style.overflow=''; }
+
+let lunaFreeCount=0, lunaMaxFree=5;
+
+function openLuna(){
+  document.getElementById('lunaModal').classList.add('open');
+  document.body.style.overflow='hidden';
+  const msgs=document.getElementById('lunaMsgs');
+  if(msgs.children.length===0){
+    addLunaMsg('a','Ciao! Sono qui per guidarti nel mondo dell\'astrologia. Come posso aiutarti oggi? 🌙');
+  }
+  document.getElementById('lunaTimer').textContent='—';
+  document.getElementById('lunaTimerLabel').textContent='gratuito';
+}
+
+function closeLuna(){ document.getElementById('lunaModal').classList.remove('open'); document.body.style.overflow=''; }
+
+function addLunaMsg(type,text){
+  const msgs=document.getElementById('lunaMsgs');
+  const d=document.createElement('div');
+  d.className=`msg msg-${type}`;
+  d.textContent=text;
+  msgs.appendChild(d);
+  msgs.scrollTop=msgs.scrollHeight;
+}
+
+function sendLuna(){
+  const inp=document.getElementById('lunaInp');
+  const txt=inp.value.trim(); if(!txt) return;
+  addLunaMsg('u',txt);
+  inp.value='';
+  lunaFreeCount++;
+  if(lunaFreeCount>=lunaMaxFree){
+    setTimeout(()=>{
+      addLunaMsg('a','Ho risposto a tutto quello che posso offrirti gratuitamente. Se vuoi continuare, dai un\'occhiata ai piani disponibili. 🌙');
+      document.getElementById('lunaPaywall').style.display='block';
+      document.getElementById('lunaInp').disabled=true;
+      document.getElementById('lunaSend').disabled=true;
+    },800);
+    return;
+  }
+  setTimeout(()=>{
+    addLunaMsg('a','Grazie per la tua domanda! Per darti una risposta personalizzata, avrei bisogno dei tuoi dati di nascita. Vuoi inserirli? ✨');
+  },900);
+}
+
+document.getElementById('lunaInp').addEventListener('keydown',e=>{if(e.key==='Enter') sendLuna();});
+
+function selLPlan(el,p){ document.querySelectorAll('.lplan').forEach(x=>x.classList.remove('sel')); el.classList.add('sel'); }
+
+document.querySelectorAll('.bni').forEach(b=>{
+  b.addEventListener('click',function(){
+    document.querySelectorAll('.bni').forEach(x=>x.classList.remove('on'));
+    this.classList.add('on');
+  });
+});
+
+document.addEventListener('click',e=>{
+  if(!e.target.closest('.umenu')) document.getElementById('udrop').classList.remove('open');
+  ['authModal','signModal','persModal','srvModal','lunaModal'].forEach(id=>{
+    if(e.target===document.getElementById(id)){
+      document.getElementById(id).classList.remove('open');
+      document.body.style.overflow='';
+    }
+  });
+});
+
 const SERVICES={
   natale:{ico:'⭐',name:'Tema Natale Completo',tagline:'La mappa della tua anima — consegna entro 24h',
     desc:'Analisi dettagliata della tua carta natale: Sole, Luna, Ascendente, le 12 case astrologiche, tutti i pianeti e i principali aspetti. Scopri chi sei davvero, i tuoi punti di forza, le sfide ricorrenti e il tuo potenziale unico.',
@@ -764,8 +903,9 @@ const SERVICES={
     includes:['Analisi Midcielo e X casa','Talenti nascosti','Carriere e ambienti ideali','Timing per cambi e promozioni','Relazioni con colleghi e superiori','Report professionale completo'],
     price:'€17,99',billing:'Acquisto singolo · Consegna in 24h'},
 };
+
 function openSrv(k){
-  const s=SERVICES[k];if(!s)return;
+  const s=SERVICES[k]; if(!s) return;
   document.getElementById('srv-ico').textContent=s.ico;
   document.getElementById('srv-name').textContent=s.name;
   document.getElementById('srv-tagline').textContent=s.tagline;
@@ -777,65 +917,9 @@ function openSrv(k){
   document.getElementById('srvModal').classList.add('open');
   document.body.style.overflow='hidden';
 }
-function closeSrv(){document.getElementById('srvModal').classList.remove('open');document.body.style.overflow='';}
 
-// LUNA CHAT
-const LUNA_RESPONSES=[
-  'Le stelle mostrano un momento interessante per te. Posso aiutarti a capire meglio cosa sta succedendo nella tua vita in questo periodo? 🌙',
-  'Quello che sento nelle tue parole è una domanda più profonda. Con i tuoi dati natali potrei darti una risposta molto più precisa e personale. ✨',
-  'È una domanda bellissima. L\'astrologia ha molto da dirti su questo — ma per andare davvero in profondità ho bisogno della tua data di nascita. 💫',
-  'Capisco. Ogni segno vive questo in modo diverso, ma il tuo tema natale specifico direbbe molto di più. Vuoi scoprire come funziona? 🌟',
-  'Sei sulla strada giusta. Posso spiegarti tutti i servizi disponibili per approfondire — cosa ti interessa di più tra amore, lavoro o crescita personale? ⭐',
-];
-let lunaRespIdx=0,lunaFreeCount=0,lunaMaxFree=5;
+function closeSrv(){ document.getElementById('srvModal').classList.remove('open'); document.body.style.overflow=''; }
 
-function openLuna(){
-  document.getElementById('lunaModal').classList.add('open');
-  document.body.style.overflow='hidden';
-  const msgs=document.getElementById('lunaMsgs');
-  if(msgs.children.length===0){
-    addLunaMsg('a','Ciao! Sono qui per guidarti nel mondo dell\'astrologia. Posso rispondere alle tue domande e spiegarti come funzionano i nostri servizi. Come posso aiutarti oggi? 🌙');
-  }
-  document.getElementById('lunaTimer').textContent='—';
-  document.getElementById('lunaTimerLabel').textContent='gratuito';
-}
-function closeLuna(){
-  document.getElementById('lunaModal').classList.remove('open');
-  document.body.style.overflow='';
-}
-function addLunaMsg(type,text){
-  const msgs=document.getElementById('lunaMsgs');
-  const d=document.createElement('div');
-  d.className=`msg msg-${type}`;d.textContent=text;
-  msgs.appendChild(d);msgs.scrollTop=msgs.scrollHeight;
-}
-function sendLuna(){
-  const inp=document.getElementById('lunaInp');
-  const txt=inp.value.trim();if(!txt)return;
-  addLunaMsg('u',txt);inp.value='';
-  lunaFreeCount++;
-  if(lunaFreeCount>=lunaMaxFree){
-    setTimeout(()=>{
-      addLunaMsg('a','Ho risposto a tutto quello che posso offrirti gratuitamente. Se vuoi continuare il nostro viaggio insieme, dai un\'occhiata alle opzioni disponibili. 🌙');
-      document.getElementById('lunaPaywall').style.display='block';
-      document.getElementById('lunaInp').disabled=true;
-      document.getElementById('lunaSend').disabled=true;
-    },800);
-    return;
-  }
-  setTimeout(()=>{
-    const r=LUNA_RESPONSES[lunaRespIdx%LUNA_RESPONSES.length];
-    lunaRespIdx++;addLunaMsg('a',r);
-  },900);
-}
-document.getElementById('lunaInp').addEventListener('keydown',e=>{if(e.key==='Enter')sendLuna();});
-function selLPlan(el,p){document.querySelectorAll('.lplan').forEach(x=>x.classList.remove('sel'));el.classList.add('sel');}
-function openLunaFromSign(){closeSign();setTimeout(openLuna,200);}
-
-// BOTTOM NAV
-document.querySelectorAll('.bni').forEach(b=>{b.addEventListener('click',function(){document.querySelectorAll('.bni').forEach(x=>x.classList.remove('on'));this.classList.add('on');});});
-
-// GEO — silenzioso, solo salva dati
 async function detectGeo(){
   try{
     const r=await fetch('https://ipapi.co/json/');
