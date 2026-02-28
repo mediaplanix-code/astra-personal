@@ -641,7 +641,10 @@ let currentSign=null, currentHoroTab='day';
 
 async function fetchHoro(sign, period){
   if(!user) return 'Accedi per vedere il tuo oroscopo personalizzato ✦';
+  
   const today = new Date().toISOString().split('T')[0];
+  
+  // Controlla cache Supabase
   const {data: cached} = await sb
     .from('horoscope_cache')
     .select('horoscope_text')
@@ -649,17 +652,73 @@ async function fetchHoro(sign, period){
     .eq('cache_date', today)
     .eq('cache_type', period)
     .maybeSingle();
+  
   if(cached) return cached.horoscope_text;
-  const newHoroscope = `Oroscopo personalizzato per ${sign} - ${period}. (Presto disponibile)`;
-  await sb
-    .from('horoscope_cache')
-    .insert({
-      user_id: user.id,
-      cache_date: today,
-      cache_type: period,
-      horoscope_text: newHoroscope
+  
+  try {
+    // Ottieni i dati di nascita dell'utente
+    const {data: birthData} = await sb
+      .from('birth_data')
+      .select('*')
+      .eq('user_id', user.id)
+      .eq('is_primary', true)
+      .single();
+    
+    if(!birthData) return 'Completa prima i tuoi dati di nascita ✦';
+    
+    // Chiama Nocturna su Render
+    const response = await fetch('https://nocturna-astrologia.onrender.com/api/v1/transits', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        date: today,
+        time: birthData.birth_time || '12:00',
+        lat: 41.9028,  // DA MIGLIORARE: usare coordinate reali da città
+        lng: 12.4964,  // Al momento usa Roma come default
+        house_system: 'placidus'
+      })
     });
-  return newHoroscope;
+    
+    const astroData = await response.json();
+    
+    // Genera testo in base ai dati ricevuti
+    const horoscopeText = generateHoroscopeText(sign, period, astroData);
+    
+    // Salva in cache
+    await sb
+      .from('horoscope_cache')
+      .insert({
+        user_id: user.id,
+        cache_date: today,
+        cache_type: period,
+        horoscope_text: horoscopeText
+      });
+    
+    return horoscopeText;
+    
+  } catch (error) {
+    console.error('Errore Nocturna:', error);
+    return 'Al momento non riesco a calcolare il tuo oroscopo. Riprova più tardi. 🌙';
+  }
+}
+
+// Funzione per generare testo (semplice per ora)
+function generateHoroscopeText(sign, period, astroData) {
+  const signNames = {
+    ariete: 'Ariete', toro: 'Toro', gemelli: 'Gemelli', cancro: 'Cancro',
+    leone: 'Leone', vergine: 'Vergine', bilancia: 'Bilancia', scorpione: 'Scorpione',
+    sagittario: 'Sagittario', capricorno: 'Capricorno', acquario: 'Acquario', pesci: 'Pesci'
+  };
+  
+  const signName = signNames[sign] || sign;
+  
+  if (period === 'day') {
+    return `Caro ${signName}, oggi la Luna è in posizione favorevole per te. È un buon momento per prendere iniziative e seguire la tua intuizione. Le stelle ti sostengono nelle decisioni importanti. 🌟`;
+  } else if (period === 'month') {
+    return `${signName}, questo mese ti porterà opportunità di crescita personale. Mercurio ti aiuterà nella comunicazione e nei rapporti con gli altri. Sfrutta questa energia positiva. ✨`;
+  } else {
+    return `${signName}, il tuo anno sarà caratterizzato da trasformazioni positive. Giove porta espansione e fortuna nelle aree che ti stanno a cuore. Preparati a grandi cambiamenti. 🌠`;
+  }
 }
 
 const SIGNS={
