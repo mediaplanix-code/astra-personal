@@ -916,6 +916,8 @@ async function fetchHoro(sign, period){
 }
 
 function openSign(s){
+  // Se loggato, apri sempre il segno dell'utente
+  if(user && userSunSign && SIGNS[userSunSign]) s = userSunSign;
   const d=SIGNS[s]; if(!d) return;
   currentSign=s;
   document.getElementById('sm-sym').textContent=d.sym;
